@@ -22,22 +22,6 @@ All data is stored in **localStorage** so that results persist even after refres
 
 ---
 
-## 📌 Positions
-
-The system supports the following positions:
-
-1. Vice 1  
-2. Vice 2  
-3. Treasurer  
-4. Auditor  
-5. Membership  
-6. Information  
-7. Social  
-8. Civic  
-9. Property Custodian  
-
----
-
 ## 🧑‍💻 Usage
 
 ### 1️⃣ Add Candidates
@@ -70,7 +54,7 @@ The system supports the following positions:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/voting-tally-system.git
+   git clone https://github.com/skrillx1/Voting-Tally-System.git
 Open index.html in your browser to manage candidates and votes
 
 Open live.html in another browser tab to view live results
