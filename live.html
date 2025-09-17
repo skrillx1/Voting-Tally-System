@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Tally View</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/all.min.css">
+  <style>
+    body {
+      background: #f4f6f9;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .highlight {
+      animation: highlight 3s ease-out;
+    }
+    @keyframes highlight {
+      from { background-color: #22b40c70; }
+      to { background-color: transparent; }
+    }
+    .leader-icon {
+      color: #ffc107; /* gold */
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4 text-center text-primary fw-bold">
+      <i class="fa-solid fa-chart-line"></i> Live Voting Results
+    </h1>
+
+    <!-- Tally Results -->
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <i class="fa-solid fa-table me-2"></i> Tally Results
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle" id="tallyTable">
+            <thead class="table-light">
+              <tr>
+                <th>Candidate</th>
+                <th>Vice 1</th>
+                <th>Vice 2</th>
+                <th>Treasurer</th>
+                <th>Auditor</th>
+                <th>Membership</th>
+                <th>Information</th>
+                <th>Social</th>
+                <th>Civic</th>
+                <th>Property Custodian</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const positions = ["Vice 1","Vice 2","Treasurer","Auditor","Membership","Information","Social","Civic","Property Custodian"];
+    let previousTallies = {}; // keep track of old tallies
+
+    function renderData() {
+      const candidates = JSON.parse(localStorage.getItem("candidates")) || {};
+      const tallies = JSON.parse(localStorage.getItem("tallies")) || {};
+      const resultsBody = document.getElementById("resultsBody");
+
+      // Calculate leaders per column
+      const maxPerPosition = {};
+      positions.forEach(pos => {
+        let maxVotes = 0;
+        Object.keys(candidates).forEach(id => {
+          const votes = tallies[id]?.[pos] || 0;
+          if (votes > maxVotes) maxVotes = votes;
+        });
+        maxPerPosition[pos] = maxVotes;
+      });
+
+      resultsBody.innerHTML = "";
+      Object.entries(candidates).forEach(([id, name]) => {
+        const tr = document.createElement("tr");
+        let cells = positions.map(pos => {
+          const votes = tallies[id]?.[pos] || 0;
+          const isLeader = votes === maxPerPosition[pos] && votes > 0;
+
+          // Check if this cell increased since last render
+          const oldVotes = previousTallies[id]?.[pos] || 0;
+          const increased = votes > oldVotes;
+
+          return `<td class="${increased ? 'highlight' : ''}">
+            ${votes}${isLeader ? ' <i class="fa-solid fa-trophy leader-icon"></i>' : ''}
+          </td>`;
+        }).join("");
+
+        tr.innerHTML = `
+          <td class="fw-bold">${id} - ${name}</td>
+          ${cells}
+        `;
+        resultsBody.appendChild(tr);
+      });
+
+      // Save current tallies for next comparison
+      previousTallies = JSON.parse(JSON.stringify(tallies));
+    }
+
+    // Auto refresh every 2s
+    setInterval(renderData, 2000);
+
+    // Initial load
+    renderData();
+  </script>
+</body>
+</html>

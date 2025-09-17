@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tally Voting System</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/all.min.css">
+  <style>
+    body {
+      background-color: #f9fafb;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .highlight {
+      animation: highlight 2s ease-in-out;
+    }
+    @keyframes highlight {
+      from { background-color: #fff3cd; }
+      to { background-color: transparent; }
+    }
+    .section-title {
+      font-weight: 600;
+      color: #374151;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4 text-center"><i class="fa-solid fa-vote-yea text-primary"></i> Voting System</h1>
+
+    <!-- Voting Section -->
+<div class="card mb-4">
+  <div class="card-header bg-secondary text-white">
+    <i class="fa-solid fa-check-to-slot"></i> Cast Votes
+  </div>
+  <div class="card-body">
+    <div id="statusMessage" class="mb-2 text-success fw-bold"></div>
+
+    <!-- NEW: Last Submitted Votes -->
+    <div id="lastVotes" class="mb-3 text-muted fst-italic"></div>
+
+    <div class="input-group">
+      <input type="text" id="voteInput" class="form-control" placeholder="Enter votes (e.g., 1 0 3 2)">
+      <button class="btn btn-primary" onclick="submitVotes()"><i class="fa fa-paper-plane"></i> Submit</button>
+    </div>
+    <small class="text-muted d-block mt-2" style="font-size: 0.9rem; line-height: 1.5;">
+      <strong>Tips:</strong><br>
+      Press <strong>Enter</strong> to submit quickly<br>
+      Press <strong>0</strong> to skip the position<br>
+      Use a <strong>single space</strong> to separate entries
+    </small>
+  </div>
+</div>
+
+
+    <!-- Leading Candidates -->
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white">
+        <i class="fa-solid fa-trophy"></i> Leading Candidates
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle text-center" id="leadersTable">
+            <thead class="table-light">
+              <tr>
+                <th>Position</th>
+                <th>Leader(s)</th>
+                <th>Votes</th>
+              </tr>
+            </thead>
+            <tbody id="leadersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate Management -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <i class="fa-solid fa-users"></i> Manage Candidates
+      </div>
+      <div class="card-body">
+        <div class="input-group mb-3">
+          <input type="text" id="newCandidate" class="form-control" placeholder="Enter candidate name">
+          <button class="btn btn-success" onclick="addCandidate()"><i class="fa fa-plus"></i> Add</button>
+        </div>
+        <ul class="list-group" id="candidateList"></ul>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex gap-2 justify-content-end">
+      <input type="file" id="importFile" accept=".csv" class="d-none" onchange="importCSV(event)">
+      <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">
+        <i class="fa-solid fa-file-import"></i> Import Tally
+      </button>
+      <button class="btn btn-danger" onclick="resetData()"><i class="fa-solid fa-rotate"></i> Reset Data</button>
+      <button class="btn btn-success" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+    </div>
+
+  </div>
+
+  <script>
+
+    function importCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.trim().split("\n");
+
+        // Detect header row (assume format: Candidate, Vice 1, Vice 2, ...)
+        const headers = lines[0].split(",");
+        const posCols = headers.slice(1); // should match your positions
+
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(",");
+          const name = cols[0].trim();
+          if (!name) continue;
+
+          // Find if candidate already exists (case-insensitive match)
+          let candidateId = Object.keys(candidates).find(
+            id => candidates[id].toLowerCase() === name.toLowerCase()
+          );
+
+          // If not found, create new candidate
+          if (!candidateId) {
+            candidateId = Object.keys(candidates).length + 1;
+            candidates[candidateId] = name;
+            tallies[candidateId] = positions.reduce((a, p) => ({...a, [p]: 0}), {});
+          }
+
+          // Merge votes
+          posCols.forEach((pos, idx) => {
+            const votes = parseInt(cols[idx + 1] || 0, 10);
+            if (!isNaN(votes)) {
+              tallies[candidateId][pos] = (tallies[candidateId][pos] || 0) + votes;
+            }
+          });
+        }
+
+        saveData();
+        renderCandidates();
+        renderLeaders();
+        alert("✅ Tally data imported successfully!");
+        event.target.value = ""; // reset file input
+      };
+
+      reader.readAsText(file);
+    }
+
+
+    const positions = ["Vice 1","Vice 2","Treasurer","Auditor","Membership","Information","Social","Civic","Property Custodian"];
+
+    let candidates = JSON.parse(localStorage.getItem("candidates")) || {};
+    let tallies = JSON.parse(localStorage.getItem("tallies")) || {};
+
+    function saveData() {
+      localStorage.setItem("candidates", JSON.stringify(candidates));
+      localStorage.setItem("tallies", JSON.stringify(tallies));
+    }
+
+    function renderCandidates() {
+      const list = document.getElementById("candidateList");
+      list.innerHTML = "";
+      Object.entries(candidates).forEach(([id, name]) => {
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.innerHTML = `
+          <span><i class="fa fa-user"></i> ${id} - <strong>${name}</strong></span>
+          <div>
+            <button class="btn btn-sm btn-warning me-2" onclick="editCandidate('${id}')"><i class="fa fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="removeCandidate('${id}')"><i class="fa fa-trash"></i></button>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function addCandidate() {
+      const name = document.getElementById("newCandidate").value.trim();
+      if (!name) return;
+      const newId = Object.keys(candidates).length + 1;
+      candidates[newId] = name;
+      tallies[newId] = tallies[newId] || positions.reduce((a, p) => ({...a, [p]: 0}), {});
+      document.getElementById("newCandidate").value = "";
+      saveData();
+      renderCandidates();
+      renderLeaders();
+    }
+
+    function editCandidate(id) {
+      const newName = prompt("Edit candidate name:", candidates[id]);
+      if (newName) {
+        candidates[id] = newName.trim();
+        saveData();
+        renderCandidates();
+        renderLeaders();
+      }
+    }
+
+    function removeCandidate(id) {
+      if (confirm("Remove candidate?")) {
+        delete candidates[id];
+        delete tallies[id];
+        saveData();
+        renderCandidates();
+        renderLeaders();
+      }
+    }
+
+    function submitVotes() {
+  const input = document.getElementById("voteInput");
+  const values = input.value.trim().split(/\s+/).map(Number);
+  if (!values.length) return;
+
+  // Save last submitted votes to localStorage
+  localStorage.setItem("lastVotes", values.join(" "));
+
+  values.forEach((val, index) => {
+    if (val !== 0 && candidates[val] && positions[index]) {
+      tallies[val][positions[index]]++;
+    }
+  });
+
+  saveData();
+  input.value = "";
+  document.getElementById("statusMessage").innerText = "✅ Votes recorded!";
+  setTimeout(() => document.getElementById("statusMessage").innerText = "", 2000);
+
+  localStorage.setItem("lastUpdate", Date.now());
+  renderLeaders();
+  renderLastVotes(); // Refresh display
+}
+
+function renderLastVotes() {
+  const lastVotes = localStorage.getItem("lastVotes") || "";
+  document.getElementById("lastVotes").innerHTML = lastVotes 
+    ? `<strong>Last Submitted:</strong> ${lastVotes}` 
+    : `<em>No votes submitted yet</em>`;
+}
+
+// Call on page load
+renderLastVotes();
+
+
+    document.getElementById("voteInput").addEventListener("keypress", e => {
+      if (e.key === "Enter") submitVotes();
+    });
+
+    function resetData() {
+      if (confirm("Reset all data?")) {
+        candidates = {};
+        tallies = {};
+        saveData();
+        renderCandidates();
+        renderLeaders();
+      }
+    }
+
+    function exportCSV() {
+      // ====== Tally Results CSV ======
+      let tallyCSV = "";
+      tallyCSV += "Candidate," + positions.join(",") + "\n";
+      Object.entries(candidates).forEach(([id, name]) => {
+        let row = [name];
+        positions.forEach(pos => row.push(tallies[id]?.[pos] || 0));
+        tallyCSV += row.join(",") + "\n";
+      });
+
+      // ====== Leading Candidates CSV ======
+      let leadersCSV = "";
+      leadersCSV += "Position,Leader(s),Votes\n";
+
+      positions.forEach(pos => {
+        let maxVotes = 0;
+        let leaders = [];
+
+        Object.entries(candidates).forEach(([id, name]) => {
+          const votes = tallies[id]?.[pos] || 0;
+          if (votes > maxVotes) {
+            maxVotes = votes;
+            leaders = [name];
+          } else if (votes === maxVotes && votes > 0) {
+            leaders.push(name);
+          }
+        });
+
+        leadersCSV += `${pos},${leaders.length ? leaders.join(" & ") : "-"},${maxVotes}\n`;
+      });
+
+      // ====== Download both CSVs ======
+      function downloadCSV(content, filename) {
+        const blob = new Blob([content], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      downloadCSV(tallyCSV, "tally_results.csv");
+      downloadCSV(leadersCSV, "leading_candidates.csv");
+    }
+
+
+    function renderLeaders() {
+      const tbody = document.getElementById("leadersBody");
+      tbody.innerHTML = "";
+
+      positions.forEach(pos => {
+        let maxVotes = 0;
+        let leaders = [];
+
+        Object.entries(candidates).forEach(([id, name]) => {
+          const votes = tallies[id]?.[pos] || 0;
+          if (votes > maxVotes) {
+            maxVotes = votes;
+            leaders = [name];
+          } else if (votes === maxVotes && votes > 0) {
+            leaders.push(name);
+          }
+        });
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${pos}</strong></td>
+          <td>${leaders.length ? leaders.join(", ") : "-"}</td>
+          <td>${maxVotes}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    renderCandidates();
+    renderLeaders();
+  </script>
+</body>
+</html>
