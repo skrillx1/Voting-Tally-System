@@ -24,6 +24,14 @@
       color: #ffc107; /* gold */
       margin-left: 5px;
     }
+    td[contenteditable="true"] {
+      background: #fff9e6;
+      border: 1px dashed #ccc;
+      cursor: text;
+    }
+    td[contenteditable="true"]:focus {
+      outline: 2px solid #007bff;
+    }
   </style>
 </head>
 <body class="p-4">
@@ -63,14 +71,13 @@
 
   <script>
     const positions = ["Vice 1","Vice 2","Treasurer","Auditor","Membership","Information","Social","Civic","Property Custodian"];
-    let previousTallies = {}; // keep track of old tallies
+    let previousTallies = {};
 
     function renderData() {
       const candidates = JSON.parse(localStorage.getItem("candidates")) || {};
       const tallies = JSON.parse(localStorage.getItem("tallies")) || {};
       const resultsBody = document.getElementById("resultsBody");
 
-      // Calculate leaders per column
       const maxPerPosition = {};
       positions.forEach(pos => {
         let maxVotes = 0;
@@ -84,34 +91,82 @@
       resultsBody.innerHTML = "";
       Object.entries(candidates).forEach(([id, name]) => {
         const tr = document.createElement("tr");
+
         let cells = positions.map(pos => {
           const votes = tallies[id]?.[pos] || 0;
           const isLeader = votes === maxPerPosition[pos] && votes > 0;
-
-          // Check if this cell increased since last render
           const oldVotes = previousTallies[id]?.[pos] || 0;
           const increased = votes > oldVotes;
 
-          return `<td class="${increased ? 'highlight' : ''}">
+          return `<td 
+                    contenteditable="true" 
+                    data-id="${id}" 
+                    data-pos="${pos}" 
+                    class="${increased ? 'highlight' : ''}">
             ${votes}${isLeader ? ' <i class="fa-solid fa-trophy leader-icon"></i>' : ''}
           </td>`;
         }).join("");
 
         tr.innerHTML = `
-          <td class="fw-bold">${id} - ${name}</td>
+          <td contenteditable="true" data-id="${id}" data-pos="name" class="fw-bold">
+            ${id} - ${name}
+          </td>
           ${cells}
         `;
         resultsBody.appendChild(tr);
       });
 
-      // Save current tallies for next comparison
       previousTallies = JSON.parse(JSON.stringify(tallies));
     }
 
-    // Auto refresh every 2s
-    setInterval(renderData, 2000);
+    // Save edits (on blur or Enter) and re-render immediately
+    function saveCell(e) {
+      if (!e.target.matches("td[contenteditable='true']")) return;
 
-    // Initial load
+      const id = e.target.dataset.id;
+      const pos = e.target.dataset.pos;
+      const candidates = JSON.parse(localStorage.getItem("candidates")) || {};
+      const tallies = JSON.parse(localStorage.getItem("tallies")) || {};
+
+      let value = e.target.innerText.trim();
+
+      if (pos === "name") {
+        const parts = value.split("-");
+        if (parts.length > 1) {
+          candidates[id] = parts[1].trim();
+        } else {
+          candidates[id] = value;
+        }
+        localStorage.setItem("candidates", JSON.stringify(candidates));
+      } else {
+        const newVotes = parseInt(value.replace(/\D/g, "")) || 0;
+        if (!tallies[id]) tallies[id] = {};
+        tallies[id][pos] = newVotes;
+        localStorage.setItem("tallies", JSON.stringify(tallies));
+      }
+
+      renderData(); // update immediately in this tab
+    }
+
+    // Blur event → save changes
+    document.addEventListener("blur", saveCell, true);
+
+    // Enter key → save changes immediately
+    document.addEventListener("keydown", function(e) {
+      if (e.target.matches("td[contenteditable='true']") && e.key === "Enter") {
+        e.preventDefault(); // prevent line break
+        e.target.blur();    // triggers saveCell()
+      }
+    });
+
+    // Listen for storage updates (other tabs or programmatic changes)
+    window.addEventListener("storage", function(event) {
+      if (event.key === "candidates" || event.key === "tallies") {
+        renderData();
+      }
+    });
+
+    // Initial render
     renderData();
   </script>
 </body>
