@@ -337,6 +337,14 @@ renderLastVotes();
       });
     }
 
+    // Listen for storage updates (other tabs or programmatic changes)
+window.addEventListener("storage", function(event) {
+  if (event.key === "candidates" || event.key === "tallies") {
+    location.reload(); // full page refresh
+  }
+});
+
+
     renderCandidates();
     renderLeaders();
   </script>
