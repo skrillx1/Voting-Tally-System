@@ -31,28 +31,28 @@
     <h1 class="mb-4 text-center"><i class="fa-solid fa-vote-yea text-primary"></i> Voting System</h1>
 
     <!-- Voting Section -->
-<div class="card mb-4">
-  <div class="card-header bg-secondary text-white">
-    <i class="fa-solid fa-check-to-slot"></i> Cast Votes
-  </div>
-  <div class="card-body">
-    <div id="statusMessage" class="mb-2 text-success fw-bold"></div>
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">
+        <i class="fa-solid fa-check-to-slot"></i> Cast Votes
+      </div>
+      <div class="card-body">
+        <div id="statusMessage" class="mb-2 text-success fw-bold"></div>
 
-    <!-- NEW: Last Submitted Votes -->
-    <div id="lastVotes" class="mb-3 text-muted fst-italic"></div>
+        <!-- NEW: Last Submitted Votes -->
+        <div id="lastVotes" class="mb-3 text-muted fst-italic"></div>
 
-    <div class="input-group">
-      <input type="text" id="voteInput" class="form-control" placeholder="Enter votes (e.g., 1 0 3 2)">
-      <button class="btn btn-primary" onclick="submitVotes()"><i class="fa fa-paper-plane"></i> Submit</button>
+        <div class="input-group">
+          <input type="text" id="voteInput" class="form-control" placeholder="Enter votes (e.g., 1 0 3 2)">
+          <button class="btn btn-primary" onclick="submitVotes()"><i class="fa fa-paper-plane"></i> Submit</button>
+        </div>
+        <small class="text-muted d-block mt-2" style="font-size: 0.9rem; line-height: 1.5;">
+          <strong>Tips:</strong><br>
+          Press <strong>Enter</strong> to submit quickly<br>
+          Press <strong>0</strong> to skip the position<br>
+          Use a <strong>single space</strong> to separate entries
+        </small>
+      </div>
     </div>
-    <small class="text-muted d-block mt-2" style="font-size: 0.9rem; line-height: 1.5;">
-      <strong>Tips:</strong><br>
-      Press <strong>Enter</strong> to submit quickly<br>
-      Press <strong>0</strong> to skip the position<br>
-      Use a <strong>single space</strong> to separate entries
-    </small>
-  </div>
-</div>
 
 
     <!-- Leading Candidates -->
@@ -154,7 +154,7 @@
     }
 
 
-    const positions = ["Vice 1","Vice 2","Treasurer","Auditor","Membership","Information","Social","Civic","Property Custodian"];
+    const positions = ["Vice 1","Vice 2","Treasurer","Auditor","Information","Civic","Social","Membership","Property Custodian"];
 
     let candidates = JSON.parse(localStorage.getItem("candidates")) || {};
     let tallies = JSON.parse(localStorage.getItem("tallies")) || {};
@@ -338,11 +338,11 @@ renderLastVotes();
     }
 
     // Listen for storage updates (other tabs or programmatic changes)
-window.addEventListener("storage", function(event) {
-  if (event.key === "candidates" || event.key === "tallies") {
-    location.reload(); // full page refresh
-  }
-});
+    window.addEventListener("storage", function(event) {
+      if (event.key === "candidates" || event.key === "tallies") {
+        location.reload(); 
+      }
+    });
 
 
     renderCandidates();
