@@ -4,269 +4,1001 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dynamic Tally Voting System</title>
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- FontAwesome CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
     <style>
+      :root {
+        --font-sans:
+          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        --color-bg: #f8fafc;
+        --color-surface: #ffffff;
+        --color-surface-subtle: #f1f5f9;
+        --color-border: #e2e8f0;
+        --color-border-subtle: #f1f5f9;
+
+        --color-text-main: #0f172a;
+        --color-text-muted: #64748b;
+        --color-text-light: #94a3b8;
+
+        --color-brand-50: #eff6ff;
+        --color-brand-100: #dbeafe;
+        --color-brand-500: #3b82f6;
+        --color-brand-600: #2563eb;
+        --color-brand-700: #1d4ed8;
+
+        --color-emerald-50: #ecfdf5;
+        --color-emerald-200: #a7f3d0;
+        --color-emerald-600: #059669;
+        --color-emerald-700: #047857;
+
+        --color-amber-50: #fffbeb;
+        --color-amber-200: #fde68a;
+        --color-amber-500: #f59e0b;
+        --color-amber-600: #d97706;
+        --color-amber-700: #b45309;
+
+        --color-rose-50: #fff1f2;
+        --color-rose-100: #ffe4e6;
+        --color-rose-200: #fecdd3;
+        --color-rose-600: #e11d48;
+        --color-rose-700: #be123c;
+
+        --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-sm:
+          0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --shadow-xl:
+          0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+        --radius-full: 9999px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
       body {
-        background-color: #f4f6f9;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        font-family: var(--font-sans);
+        background-color: var(--color-bg);
+        color: var(--color-text-main);
+        line-height: 1.5;
+        min-height: 100vh;
+        padding-bottom: 3rem;
+        -webkit-font-smoothing: antialiased;
       }
+
+      /* Layout Utilities */
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem 1rem 0 1rem;
+      }
+
+      .header {
+        margin-bottom: 2rem;
+      }
+
+      .header-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      @media (min-width: 640px) {
+        .header-content {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+        }
+      }
+
+      .brand-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-lg);
+        background-color: var(--color-brand-600);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        flex-shrink: 0;
+      }
+
+      .main-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .two-col-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 1024px) {
+        .two-col-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      /* Card Component Styles */
       .card {
-        border-radius: 0.75rem;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xs);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
+
       .card-header {
-        border-top-left-radius: 0.75rem !important;
-        border-top-right-radius: 0.75rem !important;
+        padding: 1rem 1.5rem;
+        background-color: rgba(248, 250, 252, 0.6);
+        border-bottom: 1px solid var(--color-border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .card-header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
         font-weight: 600;
+        color: var(--color-text-main);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
       }
-      .position-badge {
-        font-size: 0.85rem;
-        border-radius: 0.5rem;
-        padding: 0.4rem 0.6rem;
+
+      .card-body {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        flex-grow: 1;
       }
-      .action-btn {
-        padding: 0.2rem 0.5rem;
-        font-size: 0.8rem;
+
+      /* Badges & Status Indicators */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: 500;
       }
-      .table-hover tbody tr:hover {
-        background-color: rgba(13, 110, 253, 0.03);
+
+      .badge-brand {
+        background-color: var(--color-brand-50);
+        color: var(--color-brand-700);
+        border: 1px solid var(--color-brand-100);
       }
-      .custom-modal-backdrop {
+
+      .badge-emerald {
+        background-color: var(--color-emerald-50);
+        color: var(--color-emerald-700);
+        border: 1px solid var(--color-emerald-200);
+      }
+
+      .badge-slate {
+        background-color: var(--color-surface-subtle);
+        color: var(--color-text-main);
+        font-weight: 700;
+        padding: 0.125rem 0.625rem;
+      }
+
+      .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--color-brand-500);
+        margin-right: 0.5rem;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* Form Elements */
+      .input-group {
+        display: flex;
+        position: relative;
+        width: 100%;
+      }
+
+      .input-field {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        font-family: inherit;
+        color: var(--color-text-main);
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+
+      .input-field:focus {
+        border-color: var(--color-brand-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      }
+
+      .input-with-icon {
+        padding-left: 2.75rem;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
+      .input-icon-wrapper {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        padding-left: 1rem;
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+        color: var(--color-text-light);
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        font-family: inherit;
+        border-radius: var(--radius-lg);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background-color: var(--color-brand-600);
+        color: white;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--color-brand-700);
+      }
+
+      .btn-dark {
+        background-color: #0f172a;
+        color: white;
+      }
+
+      .btn-dark:hover {
+        background-color: #1e293b;
+      }
+
+      .btn-outline {
+        background-color: var(--color-surface);
+        border-color: var(--color-border);
+        color: var(--color-text-main);
+      }
+
+      .btn-outline:hover {
+        background-color: var(--color-surface-subtle);
+      }
+
+      .btn-emerald {
+        background-color: var(--color-emerald-600);
+        color: white;
+      }
+
+      .btn-emerald:hover {
+        background-color: var(--color-emerald-700);
+      }
+
+      .btn-rose-subtle {
+        background-color: var(--color-rose-50);
+        color: var(--color-rose-700);
+        border-color: var(--color-rose-200);
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
+      }
+
+      .btn-rose-subtle:hover {
+        background-color: var(--color-rose-100);
+      }
+
+      .btn-icon {
+        padding: 0.375rem;
+        border-radius: var(--radius-md);
+        color: var(--color-text-muted);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background-color 0.15s,
+          color 0.15s;
+      }
+
+      .btn-icon:hover:not(:disabled) {
+        background-color: var(--color-surface-subtle);
+        color: var(--color-text-main);
+      }
+
+      .btn-icon:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .btn-icon-amber:hover {
+        background-color: var(--color-amber-50);
+        color: var(--color-amber-600);
+      }
+
+      .btn-icon-rose:hover {
+        background-color: var(--color-rose-50);
+        color: var(--color-rose-600);
+      }
+
+      /* Guide Badges */
+      .sequence-guide {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: var(--radius-lg);
+        background-color: var(--color-bg);
+        border: 1px solid var(--color-border);
+        min-height: 48px;
+        align-items: center;
+      }
+
+      .guide-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: var(--radius-md);
+        font-size: 0.75rem;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-main);
+      }
+
+      .guide-badge-num {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: var(--color-surface-subtle);
+        color: var(--color-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.625rem;
+        font-weight: 700;
+      }
+
+      /* Shortcuts Row */
+      .shortcuts-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding-top: 0.5rem;
+      }
+
+      @media (min-width: 640px) {
+        .shortcuts-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .shortcut-card {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: var(--color-bg);
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border-subtle);
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+
+      kbd {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.625rem;
+        font-weight: 600;
+        color: var(--color-text-main);
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Tables */
+      .table-container {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.875rem;
+      }
+
+      th {
+        background-color: rgba(248, 250, 252, 0.8);
+        padding: 0.875rem 1.5rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      td {
+        padding: 0.875rem 1.5rem;
+        border-bottom: 1px solid var(--color-border-subtle);
+        color: var(--color-text-main);
+      }
+
+      tr:hover td {
+        background-color: rgba(248, 250, 252, 0.5);
+      }
+
+      /* List Management UI */
+      .scroll-list {
+        max-height: 380px;
+        overflow-y: auto;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--color-border);
+        background-color: rgba(248, 250, 252, 0.3);
+      }
+
+      .list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--color-border-subtle);
+        transition: background-color 0.15s;
+      }
+
+      .list-item:last-child {
+        border-bottom: none;
+      }
+
+      .list-item:hover {
+        background-color: rgba(248, 250, 252, 0.8);
+      }
+
+      /* Modal System */
+      .modal-backdrop {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(4px);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 1050;
       }
+
+      .modal-card {
+        background-color: var(--color-surface);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+        max-width: 400px;
+        width: calc(100% - 2rem);
+        padding: 1.5rem;
+        border: 1px solid var(--color-border);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* SVG Icon Sizing Helpers */
+      .icon {
+        width: 1rem;
+        height: 1rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .icon-sm {
+        width: 0.875rem;
+        height: 0.875rem;
+      }
+
+      .icon-lg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
     </style>
   </head>
-  <body class="p-3 p-md-4">
-    <div class="container-lg">
-      <div
-        class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-2 border-bottom"
-      >
-        <h1 class="h2 mb-2 mb-md-0 fw-bold text-primary">
-          <i class="fa-solid fa-vote-yea me-2"></i>Tally Voting System
-        </h1>
-        <span class="badge bg-light text-dark border px-3 py-2">
-          <i class="fa-solid fa-layer-group text-primary me-1"></i> Dynamic
-          Positions Enabled
-        </span>
-      </div>
+  <body>
+    <!-- Custom Modal Container -->
+    <div id="modalContainer" class="hidden"></div>
 
-      <div class="card mb-4">
-        <div
-          class="card-header bg-secondary text-white d-flex align-items-center"
-        >
-          <i class="fa-solid fa-check-to-slot me-2"></i> Cast Votes
+    <div class="container">
+      <!-- Top Navigation / Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="brand-title">
+            <div class="icon-box">
+              <svg class="icon icon-lg" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1
+                style="
+                  font-size: 1.5rem;
+                  font-weight: 700;
+                  tracking-tight: -0.025em;
+                  color: var(--color-text-main);
+                "
+              >
+                Tally Voting System
+              </h1>
+              <p
+                style="
+                  font-size: 0.75rem;
+                  color: var(--color-text-muted);
+                  font-weight: 500;
+                "
+              >
+                Offline dynamic vote entry & synchronization dashboard
+              </p>
+            </div>
+          </div>
+          <div>
+            <span class="badge badge-brand">
+              <span class="pulse-dot"></span>
+              Dynamic Positions Active
+            </span>
+          </div>
         </div>
-        <div class="card-body">
-          <div
-            id="statusMessage"
-            class="mb-2 text-success fw-bold min-height-24"
-          ></div>
+      </header>
 
-          <!-- Dynamic Position Order Sequence Display -->
-          <div class="mb-3">
-            <label
-              class="form-label fw-bold small text-uppercase text-muted mb-2"
-            >
-              Vote Input Mapping (In Order #1 to #<span id="posCount">0</span>):
-            </label>
+      <!-- Main Grid Container -->
+      <main class="main-grid">
+        <!-- Cast Votes Card -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-header-title">
+              <svg
+                class="icon"
+                style="color: var(--color-brand-600)"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+              <span>Cast Votes Batch Entry</span>
+            </div>
             <div
-              id="positionSequenceGuide"
-              class="d-flex flex-wrap gap-2 p-2 rounded bg-light border"
-            >
-              <!-- Position sequence badges render here -->
-            </div>
+              id="statusMessage"
+              style="
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--color-emerald-600);
+                min-height: 20px;
+                display: flex;
+                align-items: center;
+              "
+            ></div>
           </div>
 
-          <!-- Last Submitted Votes Display -->
-          <div
-            id="lastVotes"
-            class="mb-3 text-muted fst-italic border-start border-3 border-info ps-2 py-1"
-          ></div>
+          <div class="card-body">
+            <!-- Position Mapping Sequence Display -->
+            <div>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 0.5rem;
+                "
+              >
+                <label
+                  style="
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: var(--color-text-muted);
+                  "
+                >
+                  Input Mapping (Position #1 to #<span id="posCount">0</span>)
+                </label>
+                <span
+                  style="font-size: 0.6875rem; color: var(--color-text-light)"
+                  >Match values to positions in exact order</span
+                >
+              </div>
+              <div id="positionSequenceGuide" class="sequence-guide">
+                <!-- Position sequence badges render dynamically -->
+              </div>
+            </div>
 
-          <div class="input-group input-group-lg">
-            <input
-              type="text"
-              id="voteInput"
-              class="form-control"
-              placeholder="Enter candidate IDs (e.g., 1 0 3 2)"
-            />
-            <button class="btn btn-primary px-4" onclick="submitVotes()">
-              <i class="fa fa-paper-plane me-1"></i> Submit
-            </button>
+            <!-- Last Submitted Votes Display -->
+            <div
+              id="lastVotes"
+              style="
+                font-size: 0.75rem;
+                color: var(--color-text-muted);
+                background-color: rgba(248, 250, 252, 0.8);
+                border-left: 2px solid var(--color-brand-500);
+                padding: 0.5rem 0.75rem;
+                border-radius: 0 var(--radius-md) var(--radius-md) 0;
+              "
+            ></div>
+
+            <!-- Input Group -->
+            <div>
+              <div class="input-group">
+                <div class="input-icon-wrapper">
+                  <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="voteInput"
+                  class="input-field input-with-icon"
+                  placeholder="Enter candidate IDs (e.g., 1 0 3 2)"
+                />
+                <button
+                  type="button"
+                  onclick="submitVotes()"
+                  class="btn btn-primary"
+                >
+                  <svg
+                    class="icon icon-sm"
+                    style="margin-right: 0.375rem"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Submit Votes
+                </button>
+              </div>
+            </div>
+
+            <!-- Keyboard Shortcuts & Guide -->
+            <div class="shortcuts-grid">
+              <div class="shortcut-card">
+                <kbd>Enter</kbd>
+                <span>Submit recorded string</span>
+              </div>
+              <div class="shortcut-card">
+                <kbd>0</kbd>
+                <span>Skip specific position</span>
+              </div>
+              <div class="shortcut-card">
+                <kbd>Space</kbd>
+                <span>Separate position entries</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Leaderboard Card -->
+        <section class="card">
+          <div class="card-header">
+            <div class="card-header-title">
+              <svg
+                class="icon"
+                style="color: var(--color-amber-500)"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                />
+              </svg>
+              <span>Leading Candidates</span>
+            </div>
+            <span class="badge badge-emerald">
+              <span
+                style="
+                  width: 6px;
+                  height: 6px;
+                  border-radius: 50%;
+                  background-color: var(--color-emerald-600);
+                  margin-right: 0.375rem;
+                "
+              ></span>
+              Live Sync
+            </span>
           </div>
 
-          <div class="row mt-3 text-muted small">
-            <div class="col-md-4">
-              <i class="fa-solid fa-keyboard text-primary me-1"></i> Press
-              <strong>Enter</strong> to submit quickly
-            </div>
-            <div class="col-md-4">
-              <i class="fa-solid fa-ban text-warning me-1"></i> Press
-              <strong>0</strong> to skip a position
-            </div>
-            <div class="col-md-4">
-              <i class="fa-solid fa-arrows-left-right text-info me-1"></i> Use
-              <strong>spaces</strong> to separate entries
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mb-4">
-        <div
-          class="card-header bg-success text-white d-flex justify-content-between align-items-center"
-        >
-          <span
-            ><i class="fa-solid fa-trophy me-2"></i> Leading Candidates</span
-          >
-          <span class="badge bg-light text-success fw-normal"
-            >Live Updates</span
-          >
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table
-              class="table table-hover table-striped align-middle text-center mb-0"
-              id="leadersTable"
-            >
-              <thead class="table-light">
+          <div class="table-container">
+            <table id="leadersTable">
+              <thead>
                 <tr>
-                  <th style="width: 10%">#</th>
-                  <th style="width: 35%">Position</th>
-                  <th style="width: 35%">Leader(s)</th>
-                  <th style="width: 20%">Votes</th>
+                  <th style="width: 64px; text-align: center">#</th>
+                  <th>Position</th>
+                  <th>Current Leader(s)</th>
+                  <th style="text-align: right">Votes</th>
                 </tr>
               </thead>
-              <tbody id="leadersBody"></tbody>
+              <tbody id="leadersBody">
+                <!-- Leaderboard rows render dynamically -->
+              </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="row g-4 mb-4">
-        <!-- Position Management Card -->
-        <div class="col-lg-6">
-          <div class="card h-100">
-            <div
-              class="card-header bg-dark text-white d-flex justify-content-between align-items-center"
-            >
-              <span
-                ><i class="fa-solid fa-sliders me-2"></i> Manage Positions</span
-              >
-              <span class="badge bg-secondary" id="totalPositionsBadge">0</span>
+        <!-- Dynamic Management Grid (Positions & Candidates) -->
+        <div class="two-col-grid">
+          <!-- Position Management Card -->
+          <section class="card">
+            <div class="card-header">
+              <div class="card-header-title">
+                <svg
+                  class="icon"
+                  style="color: var(--color-text-muted)"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                  />
+                </svg>
+                <span>Manage Positions</span>
+              </div>
+              <span class="badge badge-slate" id="totalPositionsBadge">0</span>
             </div>
+
             <div class="card-body">
-              <div class="input-group mb-3">
+              <div style="display: flex; gap: 0.5rem">
                 <input
                   type="text"
                   id="newPosition"
-                  class="form-control"
+                  class="input-field"
                   placeholder="New position name..."
                 />
-                <button class="btn btn-primary" onclick="addPosition()">
-                  <i class="fa fa-plus me-1"></i> Add Position
+                <button
+                  type="button"
+                  onclick="addPosition()"
+                  class="btn btn-dark"
+                  style="flex-shrink: 0"
+                >
+                  <svg
+                    class="icon icon-sm"
+                    style="margin-right: 0.25rem"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add
                 </button>
               </div>
-              <div class="small text-muted mb-2">
-                <i class="fa-solid fa-circle-info me-1"></i> Reorder positions
-                to update the vote entry mapping.
-              </div>
-              <ul class="list-group shadow-sm" id="positionList"></ul>
-            </div>
-          </div>
-        </div>
 
-        <!-- Candidate Management Card -->
-        <div class="col-lg-6">
-          <div class="card h-100">
-            <div
-              class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
-            >
-              <span
-                ><i class="fa-solid fa-users me-2"></i> Manage Candidates</span
+              <p
+                style="
+                  font-size: 0.75rem;
+                  color: var(--color-text-light);
+                  display: flex;
+                  align-items: center;
+                  gap: 0.375rem;
+                "
               >
-              <span
-                class="badge bg-light text-primary"
-                id="totalCandidatesBadge"
-                >0</span
-              >
+                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                  <path
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Reorder positions using arrows to adjust key order.
+              </p>
+
+              <div class="scroll-list">
+                <ul id="positionList" style="list-style: none">
+                  <!-- Rendered positions -->
+                </ul>
+              </div>
             </div>
+          </section>
+
+          <!-- Candidate Management Card -->
+          <section class="card">
+            <div class="card-header">
+              <div class="card-header-title">
+                <svg
+                  class="icon"
+                  style="color: var(--color-brand-600)"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <span>Manage Candidates</span>
+              </div>
+              <span class="badge badge-brand" id="totalCandidatesBadge">0</span>
+            </div>
+
             <div class="card-body">
-              <div class="input-group mb-3">
+              <div style="display: flex; gap: 0.5rem">
                 <input
                   type="text"
                   id="newCandidate"
-                  class="form-control"
+                  class="input-field"
                   placeholder="Enter candidate name..."
                 />
-                <button class="btn btn-success" onclick="addCandidate()">
-                  <i class="fa fa-plus me-1"></i> Add Candidate
+                <button
+                  type="button"
+                  onclick="addCandidate()"
+                  class="btn btn-primary"
+                  style="flex-shrink: 0; border-radius: var(--radius-lg)"
+                >
+                  <svg
+                    class="icon icon-sm"
+                    style="margin-right: 0.25rem"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Candidate
                 </button>
               </div>
-              <div class="small text-muted mb-2">
-                <i class="fa-solid fa-id-card me-1"></i> Candidate IDs are
-                assigned automatically for vote entry.
+
+              <p
+                style="
+                  font-size: 0.75rem;
+                  color: var(--color-text-light);
+                  display: flex;
+                  align-items: center;
+                  gap: 0.375rem;
+                "
+              >
+                <svg class="icon icon-sm" viewBox="0 0 24 24">
+                  <path
+                    d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 0h6"
+                  />
+                </svg>
+                Numeric IDs are assigned automatically for fast keypad entry.
+              </p>
+
+              <div class="scroll-list">
+                <ul id="candidateList" style="list-style: none">
+                  <!-- Rendered candidates -->
+                </ul>
               </div>
-              <ul class="list-group shadow-sm" id="candidateList"></ul>
+            </div>
+          </section>
+        </div>
+
+        <!-- System Controls & Data Actions -->
+        <section class="card" style="padding: 1.25rem">
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              align-items: center;
+              justify-content: space-between;
+              gap: 1rem;
+            "
+          >
+            <div>
+              <button
+                type="button"
+                onclick="confirmResetData()"
+                class="btn btn-rose-subtle"
+              >
+                <svg
+                  class="icon icon-sm"
+                  style="margin-right: 0.375rem"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Reset System Data
+              </button>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.75rem;
+              "
+            >
+              <input
+                type="file"
+                id="importFile"
+                accept=".csv"
+                class="hidden"
+                onchange="importCSV(event)"
+              />
+              <button
+                type="button"
+                onclick="document.getElementById('importFile').click()"
+                class="btn btn-outline"
+                style="font-size: 0.75rem; padding: 0.5rem 1rem"
+              >
+                <svg
+                  class="icon icon-sm"
+                  style="margin-right: 0.375rem; color: var(--color-text-muted)"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                Import Tally CSV
+              </button>
+              <button
+                type="button"
+                onclick="exportCSV()"
+                class="btn btn-emerald"
+                style="font-size: 0.75rem; padding: 0.5rem 1rem"
+              >
+                <svg
+                  class="icon icon-sm"
+                  style="margin-right: 0.375rem"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Export Tally & Leaders CSV
+              </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="card mb-4 bg-light">
-        <div
-          class="card-body d-flex flex-wrap gap-2 justify-content-between align-items-center"
-        >
-          <div>
-            <button class="btn btn-outline-danger" onclick="confirmResetData()">
-              <i class="fa-solid fa-rotate me-1"></i> Reset All Data
-            </button>
-          </div>
-          <div class="d-flex flex-wrap gap-2">
-            <input
-              type="file"
-              id="importFile"
-              accept=".csv"
-              class="d-none"
-              onchange="importCSV(event)"
-            />
-            <button
-              class="btn btn-warning text-dark"
-              onclick="document.getElementById('importFile').click()"
-            >
-              <i class="fa-solid fa-file-import me-1"></i> Import Tally CSV
-            </button>
-            <button class="btn btn-success" onclick="exportCSV()">
-              <i class="fa-solid fa-file-csv me-1"></i> Export Tally & Leaders
-              CSV
-            </button>
-          </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
 
+    <!-- Application Logic Javascript preserved 100% -->
     <script>
       // Default initial positions array
       const defaultPositions = [
@@ -318,40 +1050,38 @@
         totalBadge.innerText = positions.length;
 
         if (positions.length === 0) {
-          guide.innerHTML = `<span class="text-danger small fst-italic">No positions defined yet. Please add a position below.</span>`;
-          list.innerHTML = `<li class="list-group-item text-center text-muted">No positions created yet.</li>`;
+          guide.innerHTML = `<span style="color: var(--color-rose-600); font-size: 0.75rem; font-style: italic;">No positions defined yet. Please add a position below.</span>`;
+          list.innerHTML = `<li style="padding: 1rem; text-align: center; font-size: 0.75rem; color: var(--color-text-light); font-style: italic;">No positions created yet.</li>`;
           return;
         }
 
         positions.forEach((pos, index) => {
           // Render sequence badge for vote casting guide
           const badge = document.createElement("span");
-          badge.className =
-            "badge bg-white text-dark border d-flex align-items-center gap-1 shadow-sm position-badge";
-          badge.innerHTML = `<span class="badge bg-secondary rounded-circle">${index + 1}</span> <strong>${escapeHTML(pos)}</strong>`;
+          badge.className = "guide-badge";
+          badge.innerHTML = `<span class="guide-badge-num">${index + 1}</span> <strong>${escapeHTML(pos)}</strong>`;
           guide.appendChild(badge);
 
           // Render editable item in management list
           const li = document.createElement("li");
-          li.className =
-            "list-group-item d-flex justify-content-between align-items-center py-2";
+          li.className = "list-item";
           li.innerHTML = `
-          <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-dark rounded-pill">${index + 1}</span>
-            <span class="fw-semibold">${escapeHTML(pos)}</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="width: 20px; height: 20px; border-radius: 50%; background-color: var(--color-text-main); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700;">${index + 1}</span>
+            <span style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-main);">${escapeHTML(pos)}</span>
           </div>
-          <div class="btn-group">
-            <button class="btn btn-sm btn-outline-secondary action-btn" onclick="movePosition(${index}, -1)" ${index === 0 ? "disabled" : ""} title="Move Up">
-              <i class="fa-solid fa-arrow-up"></i>
+          <div style="display: flex; gap: 0.25rem;">
+            <button class="btn-icon" onclick="movePosition(${index}, -1)" ${index === 0 ? "disabled" : ""} title="Move Up">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" /></svg>
             </button>
-            <button class="btn btn-sm btn-outline-secondary action-btn" onclick="movePosition(${index}, 1)" ${index === positions.length - 1 ? "disabled" : ""} title="Move Down">
-              <i class="fa-solid fa-arrow-down"></i>
+            <button class="btn-icon" onclick="movePosition(${index}, 1)" ${index === positions.length - 1 ? "disabled" : ""} title="Move Down">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
             </button>
-            <button class="btn btn-sm btn-outline-warning action-btn text-dark" onclick="editPosition(${index})" title="Rename Position">
-              <i class="fa-solid fa-pen"></i>
+            <button class="btn-icon btn-icon-amber" onclick="editPosition(${index})" title="Rename Position">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             </button>
-            <button class="btn btn-sm btn-outline-danger action-btn" onclick="removePosition(${index})" title="Delete Position">
-              <i class="fa-solid fa-trash"></i>
+            <button class="btn-icon btn-icon-rose" onclick="removePosition(${index})" title="Delete Position">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
         `;
@@ -365,7 +1095,7 @@
         if (!name) return;
 
         if (positions.some((p) => p.toLowerCase() === name.toLowerCase())) {
-          alert("A position with this name already exists.");
+          showCustomAlert("A position with this name already exists.");
           return;
         }
 
@@ -389,44 +1119,44 @@
 
       function editPosition(index) {
         const oldName = positions[index];
-        const newName = prompt("Edit position name:", oldName);
-        if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
-          const trimmed = newName.trim();
-          if (
-            positions.some(
-              (p, i) =>
-                i !== index && p.toLowerCase() === trimmed.toLowerCase(),
-            )
-          ) {
-            alert("Another position already has this name.");
-            return;
-          }
-
-          // Migrate tally keys from old position name to new position name for all candidates
-          Object.keys(tallies).forEach((cId) => {
-            if (tallies[cId] && tallies[cId][oldName] !== undefined) {
-              tallies[cId][trimmed] = tallies[cId][oldName];
-              delete tallies[cId][oldName];
+        showCustomPrompt("Edit position name:", oldName, (newName) => {
+          if (newName && newName.trim() !== "" && newName.trim() !== oldName) {
+            const trimmed = newName.trim();
+            if (
+              positions.some(
+                (p, i) =>
+                  i !== index && p.toLowerCase() === trimmed.toLowerCase(),
+              )
+            ) {
+              showCustomAlert("Another position already has this name.");
+              return;
             }
-          });
 
-          positions[index] = trimmed;
-          saveData();
-          renderAll();
-        }
+            // Migrate tally keys from old position name to new position name for all candidates
+            Object.keys(tallies).forEach((cId) => {
+              if (tallies[cId] && tallies[cId][oldName] !== undefined) {
+                tallies[cId][trimmed] = tallies[cId][oldName];
+                delete tallies[cId][oldName];
+              }
+            });
+
+            positions[index] = trimmed;
+            saveData();
+            renderAll();
+          }
+        });
       }
 
       function removePosition(index) {
         const posName = positions[index];
-        if (
-          confirm(
-            `Are you sure you want to delete the position "${posName}"? Existing votes for this position will be preserved in candidate storage but hidden.`,
-          )
-        ) {
-          positions.splice(index, 1);
-          saveData();
-          renderAll();
-        }
+        showCustomConfirm(
+          `Are you sure you want to delete the position "${posName}"? Existing votes for this position will be preserved in candidate storage but hidden.`,
+          () => {
+            positions.splice(index, 1);
+            saveData();
+            renderAll();
+          },
+        );
       }
 
       function renderCandidates() {
@@ -438,20 +1168,26 @@
         totalBadge.innerText = keys.length;
 
         if (keys.length === 0) {
-          list.innerHTML = `<li class="list-group-item text-center text-muted">No candidates registered yet.</li>`;
+          list.innerHTML = `<li style="padding: 1rem; text-align: center; font-size: 0.75rem; color: var(--color-text-light); font-style: italic;">No candidates registered yet.</li>`;
           return;
         }
 
         keys.forEach((id) => {
           const name = candidates[id];
           const li = document.createElement("li");
-          li.className =
-            "list-group-item d-flex justify-content-between align-items-center py-2";
+          li.className = "list-item";
           li.innerHTML = `
-          <span><span class="badge bg-primary rounded-pill me-2">ID: ${id}</span> <strong>${escapeHTML(name)}</strong></span>
-          <div class="btn-group">
-            <button class="btn btn-sm btn-outline-warning action-btn text-dark" onclick="editCandidate('${id}')"><i class="fa fa-pen"></i></button>
-            <button class="btn btn-sm btn-outline-danger action-btn" onclick="removeCandidate('${id}')"><i class="fa fa-trash"></i></button>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="badge badge-brand" style="font-weight: 700;">ID: ${id}</span>
+            <span style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-main);">${escapeHTML(name)}</span>
+          </div>
+          <div style="display: flex; gap: 0.25rem;">
+            <button class="btn-icon btn-icon-amber" onclick="editCandidate('${id}')" title="Edit Candidate">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            </button>
+            <button class="btn-icon btn-icon-rose" onclick="removeCandidate('${id}')" title="Delete Candidate">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
           </div>
         `;
           list.appendChild(li);
@@ -478,21 +1214,25 @@
       }
 
       function editCandidate(id) {
-        const newName = prompt("Edit candidate name:", candidates[id]);
-        if (newName && newName.trim() !== "") {
-          candidates[id] = newName.trim();
-          saveData();
-          renderAll();
-        }
+        showCustomPrompt("Edit candidate name:", candidates[id], (newName) => {
+          if (newName && newName.trim() !== "") {
+            candidates[id] = newName.trim();
+            saveData();
+            renderAll();
+          }
+        });
       }
 
       function removeCandidate(id) {
-        if (confirm(`Remove candidate ID ${id} (${candidates[id]})?`)) {
-          delete candidates[id];
-          delete tallies[id];
-          saveData();
-          renderAll();
-        }
+        showCustomConfirm(
+          `Remove candidate ID ${id} (${candidates[id]})?`,
+          () => {
+            delete candidates[id];
+            delete tallies[id];
+            saveData();
+            renderAll();
+          },
+        );
       }
 
       function submitVotes() {
@@ -503,7 +1243,9 @@
         const values = rawText.split(/\s+/).map(Number);
 
         if (positions.length === 0) {
-          alert("Please add at least one position before recording votes.");
+          showCustomAlert(
+            "Please add at least one position before recording votes.",
+          );
           return;
         }
 
@@ -527,8 +1269,12 @@
         input.value = "";
 
         const status = document.getElementById("statusMessage");
-        status.innerText = `✅ Recorded ${entriesRecorded} vote(s) successfully!`;
-        setTimeout(() => (status.innerText = ""), 3000);
+        status.style.color = "var(--color-emerald-600)";
+        status.innerHTML = `
+          <svg class="icon icon-sm" style="margin-right: 0.375rem;" viewBox="0 0 24 24">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg> Recorded ${entriesRecorded} vote(s) successfully!`;
+        setTimeout(() => (status.innerText = ""), 3500);
 
         localStorage.setItem("lastUpdate", Date.now());
         renderLeaders();
@@ -537,9 +1283,72 @@
 
       function renderLastVotes() {
         const lastVotes = localStorage.getItem("lastVotes") || "";
-        document.getElementById("lastVotes").innerHTML = lastVotes
-          ? `<strong>Last Submitted Sequence:</strong> <span class="badge bg-secondary fs-6">${escapeHTML(lastVotes)}</span>`
-          : `<em>No votes submitted yet</em>`;
+        const container = document.getElementById("lastVotes");
+
+        if (lastVotes) {
+          container.innerHTML = `
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;">
+              <div>
+                <span style="font-weight: 600; color: var(--color-text-main);">Last Submitted Sequence:</span> 
+                <span style="font-family: monospace; font-weight: 700; background-color: var(--color-surface-subtle); padding: 0.125rem 0.375rem; border-radius: var(--radius-sm); border: 1px solid var(--color-border); margin-left: 0.25rem;">${escapeHTML(lastVotes)}</span>
+              </div>
+              <button onclick="undoAndEditLastVote()" title="Undo this vote and edit it" class="btn" style="padding: 0.25rem 0.625rem; font-size: 0.6875rem; background-color: var(--color-amber-50); color: var(--color-amber-700); border: 1px solid var(--color-amber-200);">
+                <svg class="icon icon-sm" style="margin-right: 0.25rem;" viewBox="0 0 24 24">
+                  <path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg> Undo & Edit
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `<em style="color: var(--color-text-light);">No votes submitted yet</em>`;
+        }
+      }
+
+      function undoAndEditLastVote() {
+        const lastVotes = localStorage.getItem("lastVotes");
+        if (!lastVotes) return;
+
+        const values = lastVotes.trim().split(/\s+/).map(Number);
+
+        let entriesUndone = 0;
+        values.forEach((val, index) => {
+          // Map entry index to current dynamic position index to revert the tally
+          if (index < positions.length) {
+            const currentPos = positions[index];
+            if (val !== 0 && candidates[val]) {
+              if (tallies[val] && tallies[val][currentPos] > 0) {
+                tallies[val][currentPos]--;
+                entriesUndone++;
+              }
+            }
+          }
+        });
+
+        // Save reverted state and remove last vote capability so it can only be done once
+        saveData();
+        localStorage.removeItem("lastVotes");
+
+        // Restore input
+        const input = document.getElementById("voteInput");
+        input.value = lastVotes;
+        input.focus();
+
+        // Show status message with amber color to indicate edit mode
+        const status = document.getElementById("statusMessage");
+        status.style.color = "var(--color-amber-600)";
+        status.innerHTML = `
+          <svg class="icon icon-sm" style="margin-right: 0.375rem;" viewBox="0 0 24 24">
+            <path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg> Last vote undone. Ready to edit.`;
+
+        setTimeout(() => {
+          status.innerText = "";
+          status.style.color = "var(--color-emerald-600)";
+        }, 4000);
+
+        // Update UI
+        renderLeaders();
+        renderLastVotes();
       }
 
       // Keypress handler for vote input field
@@ -552,7 +1361,7 @@
         tbody.innerHTML = "";
 
         if (positions.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="4" class="text-muted p-3">No positions currently configured.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-text-light); padding: 1.5rem; font-style: italic;">No positions currently configured.</td></tr>`;
           return;
         }
 
@@ -572,34 +1381,47 @@
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td><span class="badge bg-light text-dark border">${idx + 1}</span></td>
-          <td class="fw-bold">${escapeHTML(pos)}</td>
-          <td>${leaders.length ? leaders.map((l) => `<span class="badge bg-success-subtle text-success border border-success me-1">${escapeHTML(l)}</span>`).join(" ") : '<span class="text-muted">-</span>'}</td>
-          <td><span class="fw-bold text-primary">${maxVotes}</span></td>
+          <td style="text-align: center;"><span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: var(--radius-md); background-color: var(--color-surface-subtle); color: var(--color-text-muted); font-size: 0.75rem; font-weight: 700; border: 1px solid var(--color-border);">${idx + 1}</span></td>
+          <td style="font-weight: 600; color: var(--color-text-main);">${escapeHTML(pos)}</td>
+          <td>${
+            leaders.length
+              ? leaders
+                  .map(
+                    (l) => `
+            <span class="badge badge-emerald" style="margin-right: 0.25rem; margin-top: 0.125rem; margin-bottom: 0.125rem;">
+              <svg class="icon icon-sm" style="color: var(--color-amber-500); margin-right: 0.25rem;" viewBox="0 0 24 24">
+                <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              ${escapeHTML(l)}
+            </span>`,
+                  )
+                  .join(" ")
+              : '<span style="color: var(--color-text-light); font-weight: 400;">-</span>'
+          }</td>
+          <td style="text-align: right; font-weight: 700; color: var(--color-brand-600);">${maxVotes}</td>
         `;
           tbody.appendChild(tr);
         });
       }
 
       function confirmResetData() {
-        if (
-          confirm(
-            "Reset all positions, candidates, and tally data to initial defaults?",
-          )
-        ) {
-          positions = [...defaultPositions];
-          candidates = {};
-          tallies = {};
-          localStorage.removeItem("lastVotes");
-          saveData();
-          renderAll();
-          alert("All data reset to initial default state.");
-        }
+        showCustomConfirm(
+          "Reset all positions, candidates, and tally data to initial defaults?",
+          () => {
+            positions = [...defaultPositions];
+            candidates = {};
+            tallies = {};
+            localStorage.removeItem("lastVotes");
+            saveData();
+            renderAll();
+            showCustomAlert("All data reset to initial default state.");
+          },
+        );
       }
 
       function exportCSV() {
         if (positions.length === 0) {
-          alert("No positions available to export.");
+          showCustomAlert("No positions available to export.");
           return;
         }
 
@@ -659,7 +1481,7 @@
           const text = e.target.result;
           const lines = text.trim().split(/\r?\n/);
           if (lines.length < 2) {
-            alert("Invalid CSV format.");
+            showCustomAlert("Invalid CSV format.");
             return;
           }
 
@@ -707,7 +1529,7 @@
 
           syncTalliesStructure();
           renderAll();
-          alert("✅ Tally CSV data imported and merged successfully!");
+          showCustomAlert("Tally CSV data imported and merged successfully!");
           event.target.value = "";
         };
 
@@ -749,6 +1571,83 @@
         renderCandidates();
         renderLeaders();
         renderLastVotes();
+      }
+
+      /* Non-blocking UI Custom Modal replacements for alert/confirm/prompt */
+      function showCustomAlert(message) {
+        const modalContainer = document.getElementById("modalContainer");
+        modalContainer.innerHTML = `
+          <div class="modal-backdrop">
+            <div class="modal-card">
+              <div style="text-align: center;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--color-brand-50); color: var(--color-brand-600); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto;">
+                  <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <p style="font-size: 0.875rem; font-weight: 500; color: var(--color-text-main); margin-bottom: 1.25rem;">${escapeHTML(message)}</p>
+                <button onclick="closeModal()" class="btn btn-dark" style="width: 100%;">OK</button>
+              </div>
+            </div>
+          </div>
+        `;
+        modalContainer.classList.remove("hidden");
+      }
+
+      function showCustomConfirm(message, onConfirm) {
+        const modalContainer = document.getElementById("modalContainer");
+        modalContainer.innerHTML = `
+          <div class="modal-backdrop">
+            <div class="modal-card">
+              <div style="text-align: center;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--color-rose-50); color: var(--color-rose-600); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto;">
+                  <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <p style="font-size: 0.875rem; font-weight: 500; color: var(--color-text-main); margin-bottom: 1.25rem;">${escapeHTML(message)}</p>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button onclick="closeModal()" class="btn btn-outline" style="width: 50%;">Cancel</button>
+                  <button id="modalConfirmBtn" class="btn" style="width: 50%; background-color: var(--color-rose-600); color: white;">Confirm</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        modalContainer.classList.remove("hidden");
+        document.getElementById("modalConfirmBtn").onclick = () => {
+          closeModal();
+          onConfirm();
+        };
+      }
+
+      function showCustomPrompt(message, defaultValue, onConfirm) {
+        const modalContainer = document.getElementById("modalContainer");
+        modalContainer.innerHTML = `
+          <div class="modal-backdrop">
+            <div class="modal-card">
+              <div>
+                <p style="font-size: 0.875rem; font-weight: 500; color: var(--color-text-main); margin-bottom: 0.75rem;">${escapeHTML(message)}</p>
+                <input type="text" id="promptInput" value="${escapeHTML(defaultValue)}" class="input-field" style="margin-bottom: 1rem;" />
+                <div style="display: flex; gap: 0.5rem;">
+                  <button onclick="closeModal()" class="btn btn-outline" style="width: 50%;">Cancel</button>
+                  <button id="modalPromptBtn" class="btn btn-primary" style="width: 50%; border-radius: var(--radius-lg);">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        modalContainer.classList.remove("hidden");
+        const input = document.getElementById("promptInput");
+        input.focus();
+        input.select();
+        document.getElementById("modalPromptBtn").onclick = () => {
+          const val = input.value;
+          closeModal();
+          onConfirm(val);
+        };
+      }
+
+      function closeModal() {
+        const modalContainer = document.getElementById("modalContainer");
+        modalContainer.classList.add("hidden");
+        modalContainer.innerHTML = "";
       }
 
       window.addEventListener("storage", function (event) {
